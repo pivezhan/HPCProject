@@ -1,14 +1,24 @@
-# On Bridges we will check versus your performance versus Intel MKL library's BLAS. 
+# We will compile your code with the PrgEnv-intel and PrgEnv-gnu
+# programming environments and use the best score.  The PrgEnv-intel
+# environment is the default on Cori.  To switch to another environment, use
+# something like `module swap PrgEnv-intel PrgEnv-gnu`.
+#
+# On Cori, we will benchmark your DGEMM's performance against the performance
+# of the default vendor-tuned DGEMM. This is done in benchmark-blas.
+#
+# NERSC's cc and CC compiler wrappers link benchmark-blas's call to dgemm
+# to the correct implementation automatically. If you wish to compare with
+# other BLAS implementations, check the NERSC documentation.
 
 CC = cc 
-OPT = -O3
+OPT = -O2
 CFLAGS = -Wall -std=gnu99 $(OPT)
-#MKLROOT = /opt/intel/composer_xe_2013.1.117/mkl
-#LDLIBS = -lrt -Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_sequential.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -lpthread -lm
-LDLIBS = -lrt  -I$(MKLROOT)/include -Wl,-L$(MKLROOT)/lib/intel64/ -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl
+LDFLAGS = -Wall 
+# librt is needed for clock_gettime
+LDLIBS = -lrt  -I$(MKLROOT)/include -Wl,-L$(MKLROOT)/lib/intel64/ -lmkl_intel_lp64 -lmkl_core -lmkl_sequential -lpthread -lm -ldl -
 
 targets = benchmark-naive benchmark-blocked benchmark-blas
-objects = benchmark.o dgemm-naive.o dgemm-blocked.o dgemm-blas.o
+objects = benchmark.o dgemm-naive.o dgemm-blocked.o dgemm-blas.o 
 
 .PHONY : default
 default : all
@@ -28,4 +38,4 @@ benchmark-blas : benchmark.o dgemm-blas.o
 
 .PHONY : clean
 clean:
-	rm -f $(targets) $(objects) *.stdout
+	rm -f $(targets) $(objects)
